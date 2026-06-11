@@ -1,4 +1,6 @@
+import 'package:ai_chat_bot/app/routes/app_routes.dart';
 import 'package:ai_chat_bot/app/theme/app_theme.dart';
+import 'package:ai_chat_bot/core/utils/app_logger.dart';
 import 'package:ai_chat_bot/core/utils/extension.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/chat_message.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/comparison_item.dart';
@@ -653,64 +655,83 @@ class _SourceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fallbackAsset = _mockupAssetFor(source);
+    final metaLabel = [
+      if (source.priceLabel.isNotEmpty) source.priceLabel,
+      if (source.duration.isNotEmpty) source.duration,
+      if (source.rating != null) '${source.rating!.toStringAsFixed(1)} stars',
+      if (source.priceLabel.isEmpty &&
+          source.duration.isEmpty &&
+          source.rating == null)
+        source.category,
+    ].join(' · ');
+    final deepLink = source.deepLink;
 
-    return SizedBox(
-      width: 150,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE1E5EC)),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: source.imageUrl.isEmpty
-                    ? _SourceImage(assetPath: fallbackAsset)
-                    : Image.network(
-                        source.imageUrl,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) =>
-                            _SourceImage(assetPath: fallbackAsset),
-                      ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      source.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF111827),
-                        fontSize: 14,
-                        height: 1.2,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      source.priceLabel.isEmpty
-                          ? source.category
-                          : source.priceLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF5D6675),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+    return GestureDetector(
+      onTap: () {
+        AppLogger.info(
+          'Source card tapped: ${source.title}, deepLink: $deepLink',
+        );
+        if (deepLink.startsWith('tripgenie://resource/')) {
+          final slug = deepLink.replaceFirst('tripgenie://resource/', '');
+          Get.toNamed(AppRoutes.sourceDetail, arguments: {'slug': slug});
+        }
+      },
+      child: SizedBox(
+        width: 150,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE1E5EC)),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: source.imageUrl.isEmpty
+                      ? _SourceImage(assetPath: fallbackAsset)
+                      : Image.network(
+                          source.imageUrl,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) =>
+                              _SourceImage(assetPath: fallbackAsset),
+                        ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        source.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF111827),
+                          fontSize: 14,
+                          height: 1.2,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        metaLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF5D6675),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

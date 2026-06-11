@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:ai_chat_bot/core/network/api_client.dart';
+import 'package:ai_chat_bot/feature/chat/data/models/resource_detail.dart';
 import 'package:ai_chat_bot/feature/chat/domain/entities/chat_stream_event.dart';
 import 'package:dio/dio.dart';
 
@@ -76,6 +77,18 @@ class TripGenieApi {
     if (event != null) {
       yield event;
     }
+  }
+
+  Future<ResourceDetail> getResourceDetail(
+    String slug, {
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _client.get(
+      '/api/resources/slug/$slug',
+      cancelToken: cancelToken,
+    );
+
+    return ResourceDetail.fromJson(response.data as Map<String, dynamic>);
   }
 
   ChatStreamEvent? _buildEvent(String? eventName, List<String> dataLines) {
