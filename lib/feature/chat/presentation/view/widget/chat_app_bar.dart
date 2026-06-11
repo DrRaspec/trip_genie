@@ -27,10 +27,10 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _TripGenieMark(),
+              _KhReviewAIIcon(),
               SizedBox(width: 8),
               Text(
-                'TripGenie',
+                'KhReviewAI',
                 style: TextStyle(
                   color: Color(0xFF111827),
                   fontSize: 26,
@@ -76,71 +76,15 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-class _TripGenieMark extends StatelessWidget {
-  const _TripGenieMark();
+class _KhReviewAIIcon extends StatelessWidget {
+  const _KhReviewAIIcon();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 34,
-      height: 30,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 31,
-            height: 22,
-            decoration: BoxDecoration(
-              color: const Color(0xFF3264FF),
-              borderRadius: BorderRadius.circular(11),
-            ),
-          ),
-          Positioned(
-            top: 0,
-            child: Container(
-              width: 13,
-              height: 8,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3264FF),
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            bottom: 2,
-            child: Container(
-              width: 13,
-              height: 2,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return Icon(
+      Icons.smart_toy_rounded,
+      size: 36,
+      color: const Color(0xFF111827),
     );
   }
 }

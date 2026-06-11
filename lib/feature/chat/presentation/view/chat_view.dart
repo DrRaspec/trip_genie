@@ -242,41 +242,52 @@ class _ChatMessageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (message.role) {
-      ChatMessageRole.user => Align(
-        alignment: Alignment.centerRight,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.sizeOf(context).width * 0.78,
-          ),
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              color: Color(0xFF5A6272),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(18),
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              child: Text(
-                message.text,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  height: 1.35,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+      ChatMessageRole.user => _UserMessageBubble(text: message.text),
       ChatMessageRole.assistant => _AssistantMessage(
         message: message,
         onQuickQuestionTap: onQuickQuestionTap,
       ),
     };
+  }
+}
+
+class _UserMessageBubble extends StatelessWidget {
+  const _UserMessageBubble({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
+        ),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Color(0xFF5A6272),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(18),
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(18),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 17,
+                height: 1.35,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -303,49 +314,8 @@ class _AssistantMessage extends StatelessWidget {
           MarkdownBody(
             data: text.isEmpty ? 'Thinking...' : text,
             selectable: false,
-            styleSheet: MarkdownStyleSheet(
-              p: const TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 20,
-                height: 1.45,
-                fontWeight: FontWeight.w400,
-              ),
-              strong: const TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-              ),
-              h1: const TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 26,
-                height: 1.2,
-                fontWeight: FontWeight.w800,
-              ),
-              h2: const TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 23,
-                height: 1.25,
-                fontWeight: FontWeight.w800,
-              ),
-              h3: const TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 21,
-                height: 1.25,
-                fontWeight: FontWeight.w800,
-              ),
-              listBullet: const TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 20,
-                height: 1.45,
-                fontWeight: FontWeight.w700,
-              ),
-              a: const TextStyle(
-                color: Color(0xFF2F5BFF),
-                decoration: TextDecoration.underline,
-                fontSize: 20,
-                height: 1.45,
-              ),
-            ),
+            styleSheet: _assistantMarkdownStyle,
+            onTapLink: (_, href, _) => _openDeepLink(href),
           ),
         ],
         if (message.sources.isNotEmpty) ...[
@@ -358,29 +328,91 @@ class _AssistantMessage extends StatelessWidget {
         ],
         if (message.quickQuestions.isNotEmpty) ...[
           const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final question in message.quickQuestions)
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.sizeOf(context).width - 48,
-                  ),
-                  child: ActionChip(
-                    label: Text(
-                      question,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onPressed: () => onQuickQuestionTap(question),
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFFD6DAE2)),
-                  ),
-                ),
-            ],
+          _QuickQuestionWrap(
+            questions: message.quickQuestions,
+            onQuestionTap: onQuickQuestionTap,
           ),
         ],
+      ],
+    );
+  }
+}
+
+final _assistantMarkdownStyle = MarkdownStyleSheet(
+  p: const TextStyle(
+    color: Color(0xFF111827),
+    fontSize: 20,
+    height: 1.45,
+    fontWeight: FontWeight.w400,
+  ),
+  strong: const TextStyle(
+    color: Color(0xFF111827),
+    fontSize: 20,
+    fontWeight: FontWeight.w800,
+  ),
+  h1: const TextStyle(
+    color: Color(0xFF111827),
+    fontSize: 26,
+    height: 1.2,
+    fontWeight: FontWeight.w800,
+  ),
+  h2: const TextStyle(
+    color: Color(0xFF111827),
+    fontSize: 23,
+    height: 1.25,
+    fontWeight: FontWeight.w800,
+  ),
+  h3: const TextStyle(
+    color: Color(0xFF111827),
+    fontSize: 21,
+    height: 1.25,
+    fontWeight: FontWeight.w800,
+  ),
+  listBullet: const TextStyle(
+    color: Color(0xFF111827),
+    fontSize: 20,
+    height: 1.45,
+    fontWeight: FontWeight.w700,
+  ),
+  a: const TextStyle(
+    color: Color(0xFF2F5BFF),
+    decoration: TextDecoration.underline,
+    fontSize: 20,
+    height: 1.45,
+  ),
+);
+
+class _QuickQuestionWrap extends StatelessWidget {
+  const _QuickQuestionWrap({
+    required this.questions,
+    required this.onQuestionTap,
+  });
+
+  final List<String> questions;
+  final ValueChanged<String> onQuestionTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final question in questions)
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.sizeOf(context).width - 48,
+            ),
+            child: ActionChip(
+              label: Text(
+                question,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onPressed: () => onQuestionTap(question),
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Color(0xFFD6DAE2)),
+            ),
+          ),
       ],
     );
   }
@@ -413,7 +445,7 @@ class _ProcessCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            compact ? 'Process completed' : 'TripGenie is thinking...',
+            compact ? 'Process completed' : 'KhReviewAI is thinking...',
             style: const TextStyle(
               color: Color(0xFF111827),
               fontSize: 17,
@@ -671,10 +703,7 @@ class _SourceCard extends StatelessWidget {
         AppLogger.info(
           'Source card tapped: ${source.title}, deepLink: $deepLink',
         );
-        if (deepLink.startsWith('tripgenie://resource/')) {
-          final slug = deepLink.replaceFirst('tripgenie://resource/', '');
-          Get.toNamed(AppRoutes.sourceDetail, arguments: {'slug': slug});
-        }
+        _openDeepLink(deepLink);
       },
       child: SizedBox(
         width: 150,
@@ -764,6 +793,18 @@ class _SourceImage extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+void _openDeepLink(String? deepLink) {
+  if (deepLink == null || deepLink.trim().isEmpty) {
+    return;
+  }
+  if (deepLink.startsWith('tripgenie://resource/')) {
+    final slug = deepLink.replaceFirst('tripgenie://resource/', '').trim();
+    if (slug.isNotEmpty) {
+      Get.toNamed(AppRoutes.sourceDetail, arguments: {'slug': slug});
+    }
   }
 }
 

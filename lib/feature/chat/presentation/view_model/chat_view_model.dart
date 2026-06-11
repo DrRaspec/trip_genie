@@ -11,6 +11,7 @@ class ChatViewModel extends GetxController {
     : _repository = repository ?? Get.find<ChatRepository>();
 
   final ChatRepository _repository;
+
   final chatController = TextEditingController();
   final scrollController = ScrollController();
   final messages = <ChatMessage>[].obs;
@@ -52,7 +53,7 @@ class ChatViewModel extends GetxController {
     messages.addAll([userMessage, assistantMessage]);
     isSending.value = true;
     _cancelToken = CancelToken();
-    _scrollToBottom();
+    // _scrollToBottom();
 
     try {
       await for (final event in _repository.streamChat(
@@ -75,7 +76,7 @@ class ChatViewModel extends GetxController {
     } finally {
       isSending.value = false;
       _cancelToken = null;
-      _scrollToBottom();
+      // _scrollToBottom();
     }
   }
 
@@ -159,7 +160,7 @@ class ChatViewModel extends GetxController {
     }
     final current = messages[index];
     messages[index] = current.copyWith(text: current.text + text);
-    _scrollToBottom();
+    // _scrollToBottom();
   }
 
   void _updateAssistantSources(
@@ -219,18 +220,18 @@ class ChatViewModel extends GetxController {
     messages[index] = messages[index].copyWith(isStreaming: false);
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!scrollController.hasClients) {
-        return;
-      }
-      scrollController.animateTo(
-        scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-      );
-    });
-  }
+  // void _scrollToBottom() {
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     if (!scrollController.hasClients) {
+  //       return;
+  //     }
+  //     scrollController.animateTo(
+  //       scrollController.position.maxScrollExtent,
+  //       duration: const Duration(milliseconds: 220),
+  //       curve: Curves.easeOutCubic,
+  //     );
+  //   });
+  // }
 
   String _nextId(String prefix) {
     return '$prefix-${DateTime.now().microsecondsSinceEpoch}';
