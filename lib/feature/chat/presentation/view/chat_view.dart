@@ -652,6 +652,8 @@ class _SourceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fallbackAsset = _mockupAssetFor(source);
+
     return SizedBox(
       width: 150,
       child: DecoratedBox(
@@ -667,13 +669,13 @@ class _SourceCard extends StatelessWidget {
             children: [
               Expanded(
                 child: source.imageUrl.isEmpty
-                    ? const _SourceImagePlaceholder()
+                    ? _SourceImage(assetPath: fallbackAsset)
                     : Image.network(
                         source.imageUrl,
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) =>
-                            const _SourceImagePlaceholder(),
+                            _SourceImage(assetPath: fallbackAsset),
                       ),
               ),
               Padding(
@@ -716,22 +718,71 @@ class _SourceCard extends StatelessWidget {
   }
 }
 
-class _SourceImagePlaceholder extends StatelessWidget {
-  const _SourceImagePlaceholder();
+class _SourceImage extends StatelessWidget {
+  const _SourceImage({required this.assetPath});
+
+  final String assetPath;
 
   @override
   Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: Color(0xFFE8EBF1),
-      child: Center(
-        child: Icon(
-          Icons.travel_explore_outlined,
-          color: Color(0xFF7B8494),
-          size: 34,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(assetPath, fit: BoxFit.cover),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.02),
+                Colors.black.withValues(alpha: 0.18),
+              ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
+}
+
+String _mockupAssetFor(ResourceSummary source) {
+  final text = '${source.title} ${source.subtitle} ${source.category}'
+      .toLowerCase();
+
+  if (text.contains('kampot') ||
+      text.contains('kep') ||
+      text.contains('bokor') ||
+      text.contains('pepper')) {
+    return 'assets/images/mockups/kampot.jpg';
+  }
+  if (text.contains('koh') ||
+      text.contains('island') ||
+      text.contains('beach') ||
+      text.contains('ferry')) {
+    return 'assets/images/mockups/island.jpg';
+  }
+  if (text.contains('food') ||
+      text.contains('cooking') ||
+      text.contains('crab') ||
+      text.contains('market')) {
+    return 'assets/images/mockups/food.jpg';
+  }
+  if (text.contains('phnom penh') ||
+      text.contains('palace') ||
+      text.contains('museum') ||
+      text.contains('transfer') ||
+      text.contains('bus') ||
+      text.contains('taxi')) {
+    return 'assets/images/mockups/city.jpg';
+  }
+  if (text.contains('angkor') ||
+      text.contains('temple') ||
+      text.contains('siem reap')) {
+    return 'assets/images/mockups/temple.jpg';
+  }
+
+  return 'assets/images/mockups/temple.jpg';
 }
 
 class _RefreshQuestionsButton extends StatelessWidget {
