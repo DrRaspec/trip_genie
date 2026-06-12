@@ -1,4 +1,6 @@
+import 'package:ai_chat_bot/feature/chat/presentation/view_model/chat_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:get/state_manager.dart';
 
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ChatAppBar({super.key});
@@ -8,6 +10,8 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = ChatViewModel.instance;
+
     return AppBar(
       backgroundColor: Colors.white,
       foregroundColor: const Color(0xFF111827),
@@ -47,8 +51,15 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           tooltip: 'Mute',
-          onPressed: () {},
-          icon: const Icon(Icons.volume_off_outlined, size: 34),
+          onPressed: () => controller.toggleMute(),
+          icon: Obx(() {
+            return Icon(
+              controller.isMuted.value
+                  ? Icons.volume_off_rounded
+                  : Icons.volume_up_rounded,
+              size: 34,
+            );
+          }),
         ),
         IconButton(
           tooltip: 'More',

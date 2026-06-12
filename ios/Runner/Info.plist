@@ -83,5 +83,11 @@
 
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs microphone access so you can record your voice.</string>
+	
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

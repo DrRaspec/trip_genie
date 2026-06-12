@@ -16,6 +16,7 @@ dependencies:
   flutter_svg: ^2.3.0
   get: ^4.7.3
   internet_connection_checker_plus: ^3.0.1
+  just_audio: ^0.10.5
   speech_to_text: ^7.4.0
 
 dev_dependencies:

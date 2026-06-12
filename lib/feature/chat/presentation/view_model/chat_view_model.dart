@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:ai_chat_bot/core/services/speech_to_text_service.dart';
+import 'package:ai_chat_bot/core/services/cloud_tts_service.dart.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/chat_message.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/comparison_item.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/resource_summary.dart';
@@ -8,10 +11,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ChatViewModel extends GetxController {
-  ChatViewModel({ChatRepository? repository})
-    : _repository = repository ?? Get.find<ChatRepository>();
+  ChatViewModel({ChatRepository? repository, CloudTtsService? ttsService})
+    : ttsService = ttsService ?? Get.find<CloudTtsService>(),
+      _repository = repository ?? Get.find<ChatRepository>();
 
   final ChatRepository _repository;
+  final CloudTtsService ttsService;
+
+  static final ChatViewModel instance = Get.find<ChatViewModel>();
 
   final chatController = TextEditingController();
   final scrollController = ScrollController();
@@ -29,6 +36,8 @@ class ChatViewModel extends GetxController {
   final isListening = false.obs;
   final isTranscribing = false.obs;
   final voiceLevels = <double>[].obs;
+
+  final isMuted = true.obs;
 
   @override
   void onInit() {
@@ -281,7 +290,7 @@ class ChatViewModel extends GetxController {
     List<ResourceSummary>? sources,
     List<ComparisonItem>? comparison,
     List<String>? quickQuestions,
-  }) {
+  }) async {
     final index = messages.indexWhere((message) => message.id == assistantId);
     if (index == -1) {
       return;
@@ -293,6 +302,15 @@ class ChatViewModel extends GetxController {
       quickQuestions: quickQuestions,
       isStreaming: false,
     );
+
+    _speakAssistantAnswer(messages[index].text);
+  }
+
+  void _speakAssistantAnswer(String text) {
+    if (text.isEmpty || isMuted.value) {
+      return;
+    }
+    unawaited(ttsService.speak(text));
   }
 
   List<ComparisonItem> _parseComparison(List<Object?> data) {
@@ -308,6 +326,13 @@ class ChatViewModel extends GetxController {
       return;
     }
     messages[index] = messages[index].copyWith(isStreaming: false);
+  }
+
+  void toggleMute() async {
+    isMuted.value = !isMuted.value;
+    if (isMuted.value) {
+      await ttsService.stop();
+    }
   }
 
   // void _scrollToBottom() {

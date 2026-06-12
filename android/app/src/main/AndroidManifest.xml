@@ -7,6 +7,8 @@
     
     <application
         android:label="ai_chat_bot"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
