@@ -23,22 +23,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: const Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _KhReviewAIIcon(),
-              SizedBox(width: 8),
-              Text(
-                'KhReviewAI',
-                style: TextStyle(
-                  color: Color(0xFF111827),
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
+          _KhReviewAIIcon(),
           SizedBox(height: 3),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -81,10 +66,6 @@ class _KhReviewAIIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Icon(
-      Icons.smart_toy_rounded,
-      size: 36,
-      color: const Color(0xFF111827),
-    );
+    return Image.asset('assets/images/common/ll-3.png', height: 36);
   }
 }

@@ -1,3 +1,4 @@
+import 'package:ai_chat_bot/core/services/speech_to_text_service.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/chat_message.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/comparison_item.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/resource_summary.dart';
@@ -21,6 +22,95 @@ class ChatViewModel extends GetxController {
   CancelToken? _cancelToken;
 
   bool get hasMessages => messages.isNotEmpty;
+
+  final _speechToTextService = SpeechToTextService();
+  final isSpeechAvailable = false.obs;
+  final recognizedText = ''.obs;
+  final isListening = false.obs;
+  final isTranscribing = false.obs;
+  final voiceLevels = <double>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initSpeechToText();
+  }
+
+  void _initSpeechToText() async {
+    isSpeechAvailable.value = await _speechToTextService.init();
+
+    if (!isSpeechAvailable.value) {
+      Get.snackbar(
+        'Error',
+        'Speech recognition is not available on this device.',
+      );
+    }
+  }
+
+  Future<void> startListening() async {
+    if (isListening.value) return;
+
+    isListening.value = true;
+    voiceLevels.clear();
+
+    try {
+      final started = await _speechToTextService.startListening(
+        onTextChanged: (text) {
+          chatController.text = text;
+          chatController.selection = TextSelection.fromPosition(
+            TextPosition(offset: chatController.text.length),
+          );
+        },
+        onSoundLevelChanged: (level) {
+          final normalized = _normalizeSoundLevel(level);
+
+          voiceLevels.add(normalized);
+
+          if (voiceLevels.length > 80) {
+            voiceLevels.removeAt(0);
+          }
+        },
+      );
+
+      if (!started) {
+        isListening.value = false;
+      }
+    } catch (_) {
+      isListening.value = false;
+      voiceLevels.clear();
+      rethrow;
+    }
+  }
+
+  Future<void> stopListening() async {
+    if (!isListening.value) return;
+
+    try {
+      isListening.value = false;
+      isTranscribing.value = true;
+      await _speechToTextService.stopListening();
+    } finally {
+      isTranscribing.value = false;
+      voiceLevels.clear();
+    }
+  }
+
+  Future<void> cancelListening() async {
+    if (!isListening.value) return;
+
+    try {
+      await _speechToTextService.cancelListening();
+    } finally {
+      isListening.value = false;
+      isTranscribing.value = false;
+      voiceLevels.clear();
+      chatController.clear();
+    }
+  }
+
+  double _normalizeSoundLevel(double level) {
+    return ((level + 2) / 12).clamp(0.08, 1.0);
+  }
 
   Future<void> sendCurrentMessage() async {
     final question = chatController.text.trim();

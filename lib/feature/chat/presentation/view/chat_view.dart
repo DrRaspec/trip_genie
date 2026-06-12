@@ -6,7 +6,11 @@ import 'package:ai_chat_bot/feature/chat/data/models/chat_message.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/comparison_item.dart';
 import 'package:ai_chat_bot/feature/chat/data/models/resource_summary.dart';
 import 'package:ai_chat_bot/feature/chat/presentation/view/widget/chat_app_bar.dart';
+import 'package:ai_chat_bot/feature/chat/presentation/view/widget/chat_text_field.dart';
+import 'package:ai_chat_bot/feature/chat/presentation/view/widget/recording_mic.dart';
+import 'package:ai_chat_bot/feature/chat/presentation/view/widget/recording_wave.dart';
 import 'package:ai_chat_bot/feature/chat/presentation/view_model/chat_view_model.dart';
+import 'package:ai_chat_bot/shared/widget/unfocus_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter/services.dart';
@@ -46,62 +50,64 @@ class ChatView extends GetView<ChatViewModel> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: const ChatAppBar(),
-      body: Stack(
-        children: [
-          Obx(
-            () => CustomScrollView(
-              controller: controller.scrollController,
-              slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    24,
-                    12,
-                    24,
-                    context.bottomPadding + 172,
-                  ),
-                  sliver: SliverList.list(
-                    children: [
-                      if (!controller.hasMessages)
-                        _WelcomeContent(
-                          questions: _questions,
-                          onQuestionTap: controller.sendMessage,
-                        )
-                      else ...[
-                        const Center(
-                          child: Text(
-                            'Scroll down to see the history',
-                            style: TextStyle(
-                              color: Color(0xFF7B8494),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
+    return UnfocusWidget(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: const ChatAppBar(),
+        body: Stack(
+          children: [
+            Obx(
+              () => CustomScrollView(
+                controller: controller.scrollController,
+                slivers: [
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      24,
+                      12,
+                      24,
+                      context.bottomPadding + 172,
+                    ),
+                    sliver: SliverList.list(
+                      children: [
+                        if (!controller.hasMessages)
+                          _WelcomeContent(
+                            questions: _questions,
+                            onQuestionTap: controller.sendMessage,
+                          )
+                        else ...[
+                          const Center(
+                            child: Text(
+                              'Scroll down to see the history',
+                              style: TextStyle(
+                                color: Color(0xFF7B8494),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        for (final message in controller.messages) ...[
-                          _ChatMessageView(
-                            message: message,
-                            onQuickQuestionTap: controller.sendMessage,
-                          ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 24),
+                          for (final message in controller.messages) ...[
+                            _ChatMessageView(
+                              message: message,
+                              onQuickQuestionTap: controller.sendMessage,
+                            ),
+                            const SizedBox(height: 18),
+                          ],
                         ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _BottomComposer(controller: controller),
-          ),
-        ],
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _BottomComposer(controller: controller),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -924,51 +930,58 @@ class _BottomComposer extends StatelessWidget {
                     child: Row(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: controller.chatController,
-                            enabled: !controller.isSending.value,
-                            onSubmitted: (_) => controller.sendCurrentMessage(),
-                            minLines: 1,
-                            maxLines: 4,
-                            textInputAction: TextInputAction.send,
-                            style: const TextStyle(
-                              color: Color(0xFF111827),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                            ),
-                            decoration: const InputDecoration(
-                              filled: false,
-                              hintText: 'Ask me anything about travel',
-                              hintStyle: TextStyle(
-                                color: Color(0xFF7B8494),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child: Obx(() {
+                              final isTranscribing =
+                                  controller.isTranscribing.value;
+                              final isSending = controller.isSending.value;
+                              final enabled = !isSending || isTranscribing;
+                              final hintText = isTranscribing
+                                  ? 'Transcribing...'
+                                  : isSending
+                                  ? 'Streaming response...'
+                                  : 'Ask me anything about travel';
+
+                              if (controller.isListening.value) {
+                                return RecordingWave(
+                                  values: List<double>.from(
+                                    controller.voiceLevels,
+                                  ),
+                                  color: const Color(0xFF2F5BFF),
+                                );
+                              }
+
+                              return ChatTextField(
+                                controller: controller.chatController,
+                                enabled: enabled,
+                                onSubmitted: (_) =>
+                                    controller.sendCurrentMessage(),
+                                hintText: hintText,
+                              );
+                            }),
                           ),
                         ),
-                        IconButton(
-                          tooltip: 'Voice input',
-                          onPressed: () {},
-                          icon: const Icon(
-                            Icons.mic_none_rounded,
-                            color: Color(0xFF111827),
-                            size: 34,
-                          ),
-                        ),
+
+                        const SizedBox(width: 8),
+
+                        Obx(() {
+                          return RecordingMicButton(
+                            isListening: controller.isListening.value,
+                            onStart: controller.startListening,
+                            onStop: controller.stopListening,
+                          );
+                        }),
+
+                        const SizedBox(width: 8),
+
                         IconButton.filled(
                           tooltip: controller.isSending.value ? 'Stop' : 'Send',
                           onPressed: controller.isSending.value
                               ? controller.stopStreaming
                               : controller.sendCurrentMessage,
                           style: IconButton.styleFrom(
-                            backgroundColor: controller.isSending.value
-                                ? const Color(0xFF2F5BFF)
-                                : const Color(0xFFC6CBD4),
+                            backgroundColor: const Color(0xFF2F5BFF),
                             foregroundColor: Colors.white,
                             fixedSize: const Size(54, 54),
                           ),

@@ -77,5 +77,11 @@
 			</array>
 		</dict>
 	</array>
+	
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition to convert your voice into text.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access so you can record your voice.</string>
 </dict>
 </plist>
